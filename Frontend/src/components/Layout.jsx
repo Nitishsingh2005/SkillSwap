@@ -15,12 +15,17 @@ import {
 } from 'lucide-react';
 
 const Layout = () => {
-  const { state, dispatch } = useApp();
+  const { state, api } = useApp();
   const location = useLocation();
   const isAuthenticated = state.isAuthenticated;
   
-  const handleLogout = () => {
-    dispatch({ type: 'LOGOUT' });
+  const handleLogout = async () => {
+    try {
+      await api.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still logout locally even if API call fails
+    }
   };
 
   const unreadNotifications = state.notifications.filter(n => !n.read).length;

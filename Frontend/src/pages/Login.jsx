@@ -11,25 +11,22 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { dispatch } = useApp();
+  const { api } = useApp();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Simulate authentication with sample data
-    setTimeout(() => {
-      const user = sampleUsers.find(u => u.email === email);
-      if (user && password === 'password123') {
-        dispatch({ type: 'LOGIN', payload: user });
-        navigate('/dashboard');
-      } else {
-        setError('Invalid email or password');
-      }
+    try {
+      await api.login({ email, password });
+      navigate('/dashboard');
+    } catch (error) {
+      setError(error.message || 'Invalid email or password');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleDemoLogin = () => {

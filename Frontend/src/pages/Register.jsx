@@ -15,7 +15,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { dispatch } = useApp();
+  const { api } = useApp();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -25,7 +25,7 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -42,27 +42,18 @@ const Register = () => {
       return;
     }
 
-    // Simulate user registration
-    setTimeout(() => {
-      const newUser = {
-        id: Date.now().toString(),
+    try {
+      await api.register({
         name: formData.name,
         email: formData.email,
-        bio: '',
-        skills: [],
-        availability: [],
-        videoCallReady: false,
-        rating: 0,
-        reviewCount: 0,
-        location: '',
-        portfolioLinks: [],
-        createdAt: new Date(),
-      };
-
-      dispatch({ type: 'LOGIN', payload: newUser });
+        password: formData.password
+      });
       navigate('/profile');
+    } catch (error) {
+      setError(error.message || 'Registration failed. Please try again.');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
