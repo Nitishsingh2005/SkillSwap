@@ -19,11 +19,25 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   try {
+    console.log('Making API request to:', url);
+    console.log('Request config:', config);
+    
     const response = await fetch(url, config);
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+    
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Non-JSON response received:', text.substring(0, 200));
+      throw new Error(`Server returned non-JSON response. Status: ${response.status}`);
+    }
+    
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'Something went wrong');
+      throw new Error(data.message || `HTTP Error: ${response.status}`);
     }
     
     return data;
@@ -57,6 +71,34 @@ export const authAPI = {
     return apiRequest('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(updates),
+    });
+  },
+  
+  // Portfolio Links
+  addPortfolioLink: async (linkData) => {
+    return apiRequest('/auth/portfolio-links', {
+      method: 'POST',
+      body: JSON.stringify(linkData),
+    });
+  },
+  
+  removePortfolioLink: async (linkId) => {
+    return apiRequest(`/auth/portfolio-links/${linkId}`, {
+      method: 'DELETE',
+    });
+  },
+  
+  // Availability
+  addAvailability: async (availabilityData) => {
+    return apiRequest('/auth/availability', {
+      method: 'POST',
+      body: JSON.stringify(availabilityData),
+    });
+  },
+  
+  removeAvailability: async (slotId) => {
+    return apiRequest(`/auth/availability/${slotId}`, {
+      method: 'DELETE',
     });
   },
   

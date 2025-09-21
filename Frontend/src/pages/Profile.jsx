@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { skillsAPI, authAPI } from '../services/api';
 import { 
   Camera, 
   Plus, 
@@ -36,67 +37,219 @@ const Profile = () => {
     url: '',
   });
 
+  const [newAvailability, setNewAvailability] = useState({
+    day: '',
+    timeSlots: [''],
+  });
+
   const [showSkillForm, setShowSkillForm] = useState(false);
   const [showPortfolioForm, setShowPortfolioForm] = useState(false);
+  const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
 
   const skillCategories = [
     'Frontend', 'Backend', 'Design', 'Data Science', 'Mobile', 'DevOps', 'Marketing', 'Other'
   ];
 
   const skillLevels = ['Beginner', 'Intermediate', 'Expert'];
+  
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  const handleSaveProfile = () => {
-    dispatch({
-      type: 'UPDATE_PROFILE',
-      payload: formData
-    });
-    setIsEditing(false);
+  const handleSaveProfile = async () => {
+    try {
+      console.log('Saving profile:', formData);
+      
+      const response = await authAPI.updateProfile(formData);
+      
+      console.log('Profile updated successfully:', response);
+      
+      dispatch({
+        type: 'UPDATE_PROFILE',
+        payload: formData
+      });
+      
+      setIsEditing(false);
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert(`Failed to update profile: ${error.message}`);
+    }
   };
 
-  const handleAddSkill = () => {
-    if (!newSkill.name || !newSkill.category) return;
+  const handleAddSkill = async () => {
+    if (!newSkill.name || !newSkill.category) {
+      alert('Please fill in all required fields');
+      return;
+    }
 
-    const skill = {
-      id: Date.now().toString(),
-      ...newSkill,
-    };
+    try {
+      console.log('Adding skill:', newSkill);
+      console.log('Current user ID:', state.currentUser._id);
+      
+      const response = await skillsAPI.addSkill(state.currentUser._id, newSkill);
+      
+      console.log('Skill added successfully:', response);
+      
+      // Update local state with the response from the server
+      dispatch({
+        type: 'UPDATE_PROFILE',
+        payload: { skills: response.user.skills }
+      });
 
-    const updatedSkills = [...(state.currentUser?.skills || []), skill];
-    dispatch({
-      type: 'UPDATE_PROFILE',
-      payload: { skills: updatedSkills }
-    });
-
-    setNewSkill({ name: '', category: '', level: 'Beginner', offering: true });
-    setShowSkillForm(false);
+      setNewSkill({ name: '', category: '', level: 'Beginner', offering: true });
+      setShowSkillForm(false);
+      
+      alert('Skill added successfully!');
+    } catch (error) {
+      console.error('Error adding skill:', error);
+      alert(`Failed to add skill: ${error.message}`);
+    }
   };
 
-  const handleRemoveSkill = (skillId) => {
-    const updatedSkills = state.currentUser?.skills.filter(skill => skill.id !== skillId) || [];
-    dispatch({
-      type: 'UPDATE_PROFILE',
-      payload: { skills: updatedSkills }
+  const handleRemoveSkill = async (skillId) => {
+    try {
+      console.log('Removing skill:', skillId);
+      
+      await skillsAPI.removeSkill(state.currentUser._id, skillId);
+      
+      console.log('Skill removed successfully');
+      
+      // Update local state
+      const updatedSkills = state.currentUser?.skills.filter(skill => skill._id !== skillId) || [];
+      dispatch({
+        type: 'UPDATE_PROFILE',
+        payload: { skills: updatedSkills }
+      });
+      
+      alert('Skill removed successfully!');
+    } catch (error) {
+      console.error('Error removing skill:', error);
+      alert(`Failed to remove skill: ${error.message}`);
+    }
+  };
+
+  const handleAddPortfolioLink = async () => {
+    if (!newPortfolioLink.platform || !newPortfolioLink.url) {
+      alert('Please fill in both platform and URL');
+      return;
+    }
+
+    try {
+      console.log('Adding portfolio link:', newPortfolioLink);
+      
+      const response = await authAPI.addPortfolioLink(newPortfolioLink);
+      
+      console.log('Portfolio link added successfully:', response);
+      
+      // Update local state with the response from the server
+      dispatch({
+        type: 'UPDATE_PROFILE',
+        payload: { portfolioLinks: response.user.portfolioLinks }
+      });
+
+      setNewPortfolioLink({ platform: '', url: '' });
+      setShowPortfolioForm(false);
+      
+      alert('Portfolio link added successfully!');
+    } catch (error) {
+      console.error('Error adding portfolio link:', error);
+      alert(`Failed to add portfolio link: ${error.message}`);
+    }
+  };
+
+  const handleRemovePortfolioLink = async (linkId) => {
+    try {
+      console.log('Removing portfolio link:', linkId);
+      
+      await authAPI.removePortfolioLink(linkId);
+      
+      console.log('Portfolio link removed successfully');
+      
+      // Update local state
+      const updatedLinks = state.currentUser?.portfolioLinks.filter(link => link._id !== linkId) || [];
+      dispatch({
+        type: 'UPDATE_PROFILE',
+        payload: { portfolioLinks: updatedLinks }
+      });
+      
+      alert('Portfolio link removed successfully!');
+    } catch (error) {
+      console.error('Error removing portfolio link:', error);
+      alert(`Failed to remove portfolio link: ${error.message}`);
+    }
+  };
+
+  const handleAddAvailability = async () => {
+    if (!newAvailability.day || newAvailability.timeSlots.some(slot => !slot.trim())) {
+      alert('Please fill in day and all time slots');
+      return;
+    }
+
+    try {
+      console.log('Adding availability:', newAvailability);
+      
+      const response = await authAPI.addAvailability(newAvailability);
+      
+      console.log('Availability added successfully:', response);
+      
+      // Update local state with the response from the server
+      dispatch({
+        type: 'UPDATE_PROFILE',
+        payload: { availability: response.user.availability }
+      });
+
+      setNewAvailability({ day: '', timeSlots: [''] });
+      setShowAvailabilityForm(false);
+      
+      alert('Availability added successfully!');
+    } catch (error) {
+      console.error('Error adding availability:', error);
+      alert(`Failed to add availability: ${error.message}`);
+    }
+  };
+
+  const handleRemoveAvailability = async (slotId) => {
+    try {
+      console.log('Removing availability slot:', slotId);
+      
+      await authAPI.removeAvailability(slotId);
+      
+      console.log('Availability slot removed successfully');
+      
+      // Update local state
+      const updatedAvailability = state.currentUser?.availability.filter(slot => slot._id !== slotId) || [];
+      dispatch({
+        type: 'UPDATE_PROFILE',
+        payload: { availability: updatedAvailability }
+      });
+      
+      alert('Availability slot removed successfully!');
+    } catch (error) {
+      console.error('Error removing availability slot:', error);
+      alert(`Failed to remove availability slot: ${error.message}`);
+    }
+  };
+
+  const handleAddTimeSlot = () => {
+    setNewAvailability({
+      ...newAvailability,
+      timeSlots: [...newAvailability.timeSlots, '']
     });
   };
 
-  const handleAddPortfolioLink = () => {
-    if (!newPortfolioLink.platform || !newPortfolioLink.url) return;
-
-    const updatedLinks = [...(state.currentUser?.portfolioLinks || []), newPortfolioLink];
-    dispatch({
-      type: 'UPDATE_PROFILE',
-      payload: { portfolioLinks: updatedLinks }
+  const handleRemoveTimeSlot = (index) => {
+    const updatedSlots = newAvailability.timeSlots.filter((_, i) => i !== index);
+    setNewAvailability({
+      ...newAvailability,
+      timeSlots: updatedSlots.length > 0 ? updatedSlots : ['']
     });
-
-    setNewPortfolioLink({ platform: '', url: '' });
-    setShowPortfolioForm(false);
   };
 
-  const handleRemovePortfolioLink = (index) => {
-    const updatedLinks = state.currentUser?.portfolioLinks.filter((_, i) => i !== index) || [];
-    dispatch({
-      type: 'UPDATE_PROFILE',
-      payload: { portfolioLinks: updatedLinks }
+  const handleTimeSlotChange = (index, value) => {
+    const updatedSlots = [...newAvailability.timeSlots];
+    updatedSlots[index] = value;
+    setNewAvailability({
+      ...newAvailability,
+      timeSlots: updatedSlots
     });
   };
 
@@ -304,7 +457,7 @@ const Profile = () => {
           {/* Skills List */}
           <div className="space-y-3">
             {state.currentUser.skills.map((skill) => (
-              <div key={skill.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={skill._id || skill.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-1">
                     <h3 className="font-medium text-gray-900">{skill.name}</h3>
@@ -328,7 +481,7 @@ const Profile = () => {
                   <p className="text-sm text-gray-600">{skill.category}</p>
                 </div>
                 <button
-                  onClick={() => handleRemoveSkill(skill.id)}
+                  onClick={() => handleRemoveSkill(skill._id || skill.id)}
                   className="text-red-600 hover:text-red-700 p-1"
                 >
                   <X className="w-4 h-4" />
@@ -398,8 +551,8 @@ const Profile = () => {
 
           {/* Portfolio Links List */}
           <div className="space-y-3">
-            {state.currentUser.portfolioLinks?.map((link, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            {state.currentUser.portfolioLinks?.map((link) => (
+              <div key={link._id || link.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                     {link.platform.toLowerCase().includes('github') ? (
@@ -421,7 +574,7 @@ const Profile = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleRemovePortfolioLink(index)}
+                  onClick={() => handleRemovePortfolioLink(link._id || link.id)}
                   className="text-red-600 hover:text-red-700 p-1"
                 >
                   <X className="w-4 h-4" />
@@ -441,15 +594,113 @@ const Profile = () => {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Availability</h2>
-            <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <button 
+              onClick={() => setShowAvailabilityForm(true)}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
               <Calendar className="w-4 h-4" />
               <span>Set Availability</span>
             </button>
           </div>
 
-          <div className="text-center py-8">
-            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Availability calendar coming soon! For now, coordinate directly through messages.</p>
+          {/* Add Availability Form */}
+          {showAvailabilityForm && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-medium text-gray-900 mb-4">Add Availability</h3>
+              <div className="space-y-4">
+                <select
+                  value={newAvailability.day}
+                  onChange={(e) => setNewAvailability({ ...newAvailability, day: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="">Select day</option>
+                  {daysOfWeek.map(day => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Time Slots</label>
+                  {newAvailability.timeSlots.map((slot, index) => (
+                    <div key={index} className="flex items-center space-x-2 mb-2">
+                      <input
+                        type="text"
+                        placeholder="e.g., 09:00-12:00"
+                        value={slot}
+                        onChange={(e) => handleTimeSlotChange(index, e.target.value)}
+                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
+                      />
+                      {newAvailability.timeSlots.length > 1 && (
+                        <button
+                          onClick={() => handleRemoveTimeSlot(index)}
+                          className="text-red-600 hover:text-red-700 p-1"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    onClick={handleAddTimeSlot}
+                    className="text-blue-600 hover:text-blue-700 text-sm flex items-center space-x-1"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add time slot</span>
+                  </button>
+                </div>
+
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleAddAvailability}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Add Availability
+                  </button>
+                  <button
+                    onClick={() => setShowAvailabilityForm(false)}
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Availability List */}
+          <div className="space-y-3">
+            {state.currentUser.availability?.map((slot) => (
+              <div key={slot._id || slot.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-1">
+                    <h3 className="font-medium text-gray-900">{slot.day}</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {slot.timeSlots.map((time, timeIndex) => (
+                      <span
+                        key={timeIndex}
+                        className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-md"
+                      >
+                        {time}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleRemoveAvailability(slot._id || slot.id)}
+                  className="text-red-600 hover:text-red-700 p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            
+            {(!state.currentUser.availability || state.currentUser.availability.length === 0) && (
+              <div className="text-center py-8">
+                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No availability set yet. Let others know when you're free!</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -102,7 +102,7 @@ router.put('/profile', auth, async (req, res) => {
       req.user._id,
       { $set: updates },
       { new: true, runValidators: true }
-    );
+    ).select('-password');
 
     res.json({
       message: 'Profile updated successfully',
@@ -111,6 +111,125 @@ router.put('/profile', auth, async (req, res) => {
   } catch (error) {
     console.error('Profile update error:', error);
     res.status(500).json({ message: 'Server error during profile update' });
+  }
+});
+
+// @route   POST /api/auth/portfolio-links
+// @desc    Add portfolio link
+router.post('/portfolio-links', auth, async (req, res) => {
+  try {
+    const { platform, url } = req.body;
+    
+    if (!platform || !url) {
+      return res.status(400).json({ message: 'Platform and URL are required' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.portfolioLinks.push({ platform, url });
+    await user.save();
+
+    res.json({
+      message: 'Portfolio link added successfully',
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('Add portfolio link error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   DELETE /api/auth/portfolio-links/:linkId
+// @desc    Remove portfolio link
+router.delete('/portfolio-links/:linkId', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const link = user.portfolioLinks.id(req.params.linkId);
+    if (!link) {
+      return res.status(404).json({ message: 'Portfolio link not found' });
+    }
+
+    link.remove();
+    await user.save();
+
+    res.json({
+      message: 'Portfolio link removed successfully',
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('Remove portfolio link error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/auth/availability
+// @desc    Add availability slot
+router.post('/availability', auth, async (req, res) => {
+  try {
+    const { day, timeSlots } = req.body;
+    
+    if (!day || !timeSlots || !Array.isArray(timeSlots)) {
+      return res.status(400).json({ message: 'Day and timeSlots array are required' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if day already exists
+    const existingDay = user.availability.find(slot => slot.day === day);
+    if (existingDay) {
+      // Update existing day
+      existingDay.timeSlots = timeSlots;
+    } else {
+      // Add new day
+      user.availability.push({ day, timeSlots });
+    }
+
+    await user.save();
+
+    res.json({
+      message: 'Availability updated successfully',
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('Add availability error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   DELETE /api/auth/availability/:slotId
+// @desc    Remove availability slot
+router.delete('/availability/:slotId', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const slot = user.availability.id(req.params.slotId);
+    if (!slot) {
+      return res.status(404).json({ message: 'Availability slot not found' });
+    }
+
+    slot.remove();
+    await user.save();
+
+    res.json({
+      message: 'Availability slot removed successfully',
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('Remove availability error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
