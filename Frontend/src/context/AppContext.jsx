@@ -31,9 +31,13 @@ const appReducer = (state, action) => {
       };
     case 'UPDATE_PROFILE':
       if (!state.currentUser) return state;
+      console.log("UPDATE_PROFILE reducer - payload:", action.payload);
+      console.log("UPDATE_PROFILE reducer - currentUser before:", state.currentUser);
+      const updatedUser = { ...state.currentUser, ...action.payload };
+      console.log("UPDATE_PROFILE reducer - currentUser after:", updatedUser);
       return {
         ...state,
-        currentUser: { ...state.currentUser, ...action.payload },
+        currentUser: updatedUser,
       };
     case 'ADD_SESSION':
       return {
