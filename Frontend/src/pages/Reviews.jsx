@@ -88,49 +88,49 @@ const Reviews = () => {
   );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-slate-900 p-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Reviews</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-slate-100 mb-2 tracking-tight">Reviews</h1>
+        <p className="text-slate-300 text-lg">
           View feedback from your skill exchange sessions and leave reviews for others.
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-          <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Star className="w-6 h-6 text-yellow-600 fill-current" />
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6 text-center">
+          <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <Star className="w-6 h-6 text-yellow-400 fill-current" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">
+          <h3 className="text-2xl font-bold text-slate-100 mb-1">
             {averageRating > 0 ? averageRating.toFixed(1) : 'N/A'}
           </h3>
-          <p className="text-gray-600">Average Rating</p>
+          <p className="text-slate-300">Average Rating</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Calendar className="w-6 h-6 text-blue-600" />
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6 text-center">
+          <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <Calendar className="w-6 h-6 text-cyan-400" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">{receivedReviews.length}</h3>
-          <p className="text-gray-600">Reviews Received</p>
+          <h3 className="text-2xl font-bold text-slate-100 mb-1">{receivedReviews.length}</h3>
+          <p className="text-slate-300">Reviews Received</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-          <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <UserIcon className="w-6 h-6 text-green-600" />
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6 text-center">
+          <div className="w-12 h-12 bg-teal-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <UserIcon className="w-6 h-6 text-teal-400" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">{givenReviews.length}</h3>
-          <p className="text-gray-600">Reviews Given</p>
+          <h3 className="text-2xl font-bold text-slate-100 mb-1">{givenReviews.length}</h3>
+          <p className="text-slate-300">Reviews Given</p>
         </div>
       </div>
 
       {/* Pending Reviews */}
       {unreviewed.length > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8">
-          <h2 className="text-lg font-semibold text-yellow-800 mb-4">Pending Reviews</h2>
-          <p className="text-yellow-700 mb-4">
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-lg font-semibold text-yellow-300 mb-4 tracking-tight">Pending Reviews</h2>
+          <p className="text-yellow-200 mb-4">
             You have {unreviewed.length} completed session{unreviewed.length !== 1 ? 's' : ''} waiting for your review.
           </p>
 
@@ -142,7 +142,7 @@ const Reviews = () => {
               const partnerSkill = session?.skillExchange?.partnerSkill || '';
 
               return (
-                <div key={session.id} className="flex items-center justify-between bg-white p-4 rounded-lg">
+                <div key={session.id} className="flex items-center justify-between bg-slate-800/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700/50">
                   <div className="flex items-center space-x-3">
                     {partner?.avatar ? (
                       <img src={partner.avatar} alt={partner.name} className="w-10 h-10 rounded-full object-cover" />
@@ -152,8 +152,8 @@ const Reviews = () => {
                       </div>
                     )}
                     <div>
-                      <h3 className="font-medium text-gray-900">{partner?.name || 'Unknown'}</h3>
-                      <p className="text-sm text-gray-600">{hostSkill} ↔ {partnerSkill}</p>
+                      <h3 className="font-medium text-slate-100">{partner?.name || 'Unknown'}</h3>
+                      <p className="text-sm text-slate-300">{hostSkill} ↔ {partnerSkill}</p>
                     </div>
                   </div>
                   <button
@@ -161,7 +161,7 @@ const Reviews = () => {
                       setReviewForm({ ...reviewForm, sessionId: session.id, toUserId: partnerId });
                       setShowReviewForm(true);
                     }}
-                    className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
+                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-yellow-500/25"
                   >
                     Leave Review
                   </button>

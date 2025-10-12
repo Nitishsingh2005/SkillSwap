@@ -11,6 +11,7 @@ import Search from './pages/Search';
 import Chat from './pages/Chat';
 import Booking from './pages/Booking';
 import Matches from './pages/Matches';
+import Friends from './pages/Friends';
 import Reviews from './pages/Reviews';
 import Help from './pages/Help';
 
@@ -29,6 +30,7 @@ function App() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/booking" element={<Booking />} />
             <Route path="/matches" element={<Matches />} />
+            <Route path="/friends" element={<Friends />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/help" element={<Help />} />
           </Route>

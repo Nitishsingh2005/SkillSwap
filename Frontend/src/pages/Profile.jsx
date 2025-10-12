@@ -124,6 +124,9 @@ const Profile = () => {
       setShowSkillForm(false);
 
       alert("Skill added successfully!");
+      
+      // Trigger a custom event to refresh skill matches in Search page
+      window.dispatchEvent(new CustomEvent('skillUpdated'));
     } catch (error) {
       console.error("Error adding skill:", error);
       alert(`Failed to add skill: ${error.message}`);
@@ -148,6 +151,9 @@ const Profile = () => {
       });
 
       alert("Skill removed successfully!");
+      
+      // Trigger a custom event to refresh skill matches in Search page
+      window.dispatchEvent(new CustomEvent('skillUpdated'));
     } catch (error) {
       console.error("Error removing skill:", error);
       alert(`Failed to remove skill: ${error.message}`);
@@ -409,10 +415,10 @@ const Profile = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="text-2xl font-bold text-gray-900 border border-gray-300 rounded-lg px-3 py-2"
+                  className="text-2xl font-bold text-slate-100 bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2"
                 />
               ) : (
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-slate-100">
                   {state.currentUser.name}
                 </h1>
               )}
@@ -421,7 +427,7 @@ const Profile = () => {
                 onClick={() =>
                   isEditing ? handleSaveProfile() : setIsEditing(true)
                 }
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-cyan-500/25"
               >
                 {isEditing ? (
                   <>
@@ -458,7 +464,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, location: e.target.value })
                       }
-                      className="border border-gray-300 rounded px-2 py-1"
+                      className="bg-slate-700/50 border border-slate-600 rounded px-2 py-1 text-slate-100"
                       placeholder="Enter location"
                     />
                   ) : (
@@ -508,12 +514,12 @@ const Profile = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, bio: e.target.value })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400"
                   rows={3}
                   placeholder="Tell others about yourself and your skills..."
                 />
               ) : (
-                <p className="text-gray-700">
+                <p className="text-slate-300">
                   {state.currentUser.bio ||
                     "No bio added yet. Click edit to add one!"}
                 </p>
@@ -524,40 +530,192 @@ const Profile = () => {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Skills Section */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        {/* Skills I Want to Learn Section */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Skills</h2>
+            <h2 className="text-xl font-semibold text-slate-100 tracking-tight">Skills I Want to Learn</h2>
             <button
-              onClick={() => setShowSkillForm(true)}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={() => {
+                setNewSkill({ ...newSkill, offering: false });
+                setShowSkillForm(true);
+              }}
+              className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
             >
               <Plus className="w-4 h-4" />
               <span>Add Skill</span>
             </button>
           </div>
 
-          {/* Add Skill Form */}
-          {showSkillForm && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-4">Add New Skill</h3>
-              <div className="space-y-4">
+          {/* Skills I Want to Learn List */}
+          <div className="space-y-3">
+            {state.currentUser.skills.filter(skill => !skill.offering).map((skill) => (
+              <div
+                key={skill._id || skill.id}
+                className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-1">
+                    <h3 className="font-medium text-slate-100">{skill.name}</h3>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        skill.level === "Expert"
+                          ? "bg-green-500/20 text-green-400"
+                          : skill.level === "Intermediate"
+                          ? "bg-yellow-500/20 text-yellow-400"
+                          : "bg-blue-500/20 text-blue-400"
+                      }`}
+                    >
+                      {skill.level}
+                    </span>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                      Learning
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-300">{skill.category}</p>
+                </div>
+                <button
+                  onClick={() => handleRemoveSkill(skill._id || skill.id)}
+                  className="text-red-400 hover:text-red-300 p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+
+            {state.currentUser.skills.filter(skill => !skill.offering).length === 0 && (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Plus className="w-6 h-6 text-blue-400" />
+                </div>
+                <p className="text-slate-400">
+                  No skills to learn yet. Add skills you want to learn!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Skills I Want to Teach Section */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-slate-100 tracking-tight">Skills I Want to Teach</h2>
+            <button
+              onClick={() => {
+                setNewSkill({ ...newSkill, offering: true });
+                setShowSkillForm(true);
+              }}
+              className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-green-500/25"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Skill</span>
+            </button>
+          </div>
+
+          {/* Skills I Want to Teach List */}
+          <div className="space-y-3">
+            {state.currentUser.skills.filter(skill => skill.offering).map((skill) => (
+              <div
+                key={skill._id || skill.id}
+                className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-1">
+                    <h3 className="font-medium text-slate-100">{skill.name}</h3>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        skill.level === "Expert"
+                          ? "bg-green-500/20 text-green-400"
+                          : skill.level === "Intermediate"
+                          ? "bg-yellow-500/20 text-yellow-400"
+                          : "bg-blue-500/20 text-blue-400"
+                      }`}
+                    >
+                      {skill.level}
+                    </span>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                      Teaching
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-300">{skill.category}</p>
+                </div>
+                <button
+                  onClick={() => handleRemoveSkill(skill._id || skill.id)}
+                  className="text-red-400 hover:text-red-300 p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+
+            {state.currentUser.skills.filter(skill => skill.offering).length === 0 && (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Plus className="w-6 h-6 text-green-400" />
+                </div>
+                <p className="text-slate-400">
+                  No teaching skills yet. Add skills you can teach!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Add Skill Form Modal */}
+      {showSkillForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-8 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-slate-100 mb-6 tracking-tight">
+              Add New Skill
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Skill Type</label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="skillType"
+                      checked={!newSkill.offering}
+                      onChange={() => setNewSkill({ ...newSkill, offering: false })}
+                      className="text-blue-500"
+                    />
+                    <span className="text-slate-300">Want to Learn</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="skillType"
+                      checked={newSkill.offering}
+                      onChange={() => setNewSkill({ ...newSkill, offering: true })}
+                      className="text-green-500"
+                    />
+                    <span className="text-slate-300">Want to Teach</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Skill Name</label>
                 <input
                   type="text"
-                  placeholder="Skill name (e.g., React, Python)"
+                  placeholder="e.g., React, Python, Design"
                   value={newSkill.name}
                   onChange={(e) =>
                     setNewSkill({ ...newSkill, name: e.target.value })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400"
                 />
+              </div>
 
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
                 <select
                   value={newSkill.category}
                   onChange={(e) =>
                     setNewSkill({ ...newSkill, category: e.target.value })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100"
                 >
                   <option value="">Select category</option>
                   {skillCategories.map((category) => (
@@ -566,13 +724,16 @@ const Profile = () => {
                     </option>
                   ))}
                 </select>
+              </div>
 
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Level</label>
                 <select
                   value={newSkill.level}
                   onChange={(e) =>
                     setNewSkill({ ...newSkill, level: e.target.value })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100"
                 >
                   {skillLevels.map((level) => (
                     <option key={level} value={level}>
@@ -580,100 +741,42 @@ const Profile = () => {
                     </option>
                   ))}
                 </select>
-
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={newSkill.offering}
-                    onChange={(e) =>
-                      setNewSkill({ ...newSkill, offering: e.target.checked })
-                    }
-                    className="rounded"
-                  />
-                  <span className="text-sm">
-                    I'm offering to teach this skill
-                  </span>
-                </label>
-
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleAddSkill}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Add Skill
-                  </button>
-                  <button
-                    onClick={() => setShowSkillForm(false)}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
               </div>
-            </div>
-          )}
 
-          {/* Skills List */}
-          <div className="space-y-3">
-            {state.currentUser.skills.map((skill) => (
-              <div
-                key={skill._id || skill.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-1">
-                    <h3 className="font-medium text-gray-900">{skill.name}</h3>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        skill.level === "Expert"
-                          ? "bg-green-100 text-green-700"
-                          : skill.level === "Intermediate"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
-                    >
-                      {skill.level}
-                    </span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        skill.offering
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-orange-100 text-orange-700"
-                      }`}
-                    >
-                      {skill.offering ? "Teaching" : "Learning"}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{skill.category}</p>
-                </div>
+              <div className="flex space-x-3 pt-4">
                 <button
-                  onClick={() => handleRemoveSkill(skill._id || skill.id)}
-                  className="text-red-600 hover:text-red-700 p-1"
+                  onClick={handleAddSkill}
+                  className={`flex-1 px-4 py-2 rounded-lg transition-all duration-300 shadow-lg font-medium ${
+                    newSkill.offering
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/25"
+                      : "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 hover:shadow-blue-500/25"
+                  } text-white`}
                 >
-                  <X className="w-4 h-4" />
+                  Add Skill
+                </button>
+                <button
+                  onClick={() => setShowSkillForm(false)}
+                  className="flex-1 bg-slate-600 text-slate-300 px-4 py-2 rounded-lg hover:bg-slate-500 transition-colors"
+                >
+                  Cancel
                 </button>
               </div>
-            ))}
-
-            {state.currentUser.skills.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-500">
-                  No skills added yet. Add your first skill to get started!
-                </p>
-              </div>
-            )}
+            </div>
           </div>
         </div>
+      )}
+
+      <div className="grid lg:grid-cols-2 gap-8 mt-8">
 
         {/* Portfolio Links Section */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-slate-100 tracking-tight">
               Portfolio Links
             </h2>
             <button
               onClick={() => setShowPortfolioForm(true)}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-cyan-500/25"
             >
               <Plus className="w-4 h-4" />
               <span>Add Link</span>
@@ -682,8 +785,8 @@ const Profile = () => {
 
           {/* Add Portfolio Form */}
           {showPortfolioForm && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-4">
+            <div className="mb-6 p-4 bg-slate-700/30 rounded-lg">
+              <h3 className="font-medium text-slate-100 mb-4">
                 Add Portfolio Link
               </h3>
               <div className="space-y-4">
@@ -697,7 +800,7 @@ const Profile = () => {
                       platform: e.target.value,
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400"
                 />
 
                 <input
@@ -710,19 +813,19 @@ const Profile = () => {
                       url: e.target.value,
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400"
                 />
 
                 <div className="flex space-x-2">
                   <button
                     onClick={handleAddPortfolioLink}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-green-500/25"
                   >
                     Add Link
                   </button>
                   <button
                     onClick={() => setShowPortfolioForm(false)}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                    className="bg-slate-600 text-slate-300 px-4 py-2 rounded-lg hover:bg-slate-500 transition-colors"
                   >
                     Cancel
                   </button>
@@ -736,7 +839,7 @@ const Profile = () => {
             {state.currentUser.portfolioLinks?.map((link) => (
               <div
                 key={link._id || link.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg"
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -747,14 +850,14 @@ const Profile = () => {
                     )}
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-slate-100">
                       {link.platform}
                     </h3>
                     <a
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-700 break-all"
+                      className="text-sm text-cyan-400 hover:text-cyan-300 break-all"
                     >
                       {link.url}
                     </a>
@@ -772,7 +875,7 @@ const Profile = () => {
             {(!state.currentUser.portfolioLinks ||
               state.currentUser.portfolioLinks.length === 0) && (
               <div className="text-center py-8">
-                <p className="text-gray-500">
+                <p className="text-slate-400">
                   No portfolio links added yet. Showcase your work!
                 </p>
               </div>
@@ -781,14 +884,14 @@ const Profile = () => {
         </div>
 
         {/* Availability Section */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
+        <div className="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-slate-100 tracking-tight">
               Availability
             </h2>
             <button
               onClick={() => setShowAvailabilityForm(true)}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-cyan-500/25"
             >
               <Calendar className="w-4 h-4" />
               <span>Set Availability</span>
@@ -797,8 +900,8 @@ const Profile = () => {
 
           {/* Add Availability Form */}
           {showAvailabilityForm && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-4">
+            <div className="mb-6 p-4 bg-slate-700/30 rounded-lg">
+              <h3 className="font-medium text-slate-100 mb-4">
                 Add Availability
               </h3>
               <div className="space-y-4">
@@ -810,7 +913,7 @@ const Profile = () => {
                       day: e.target.value,
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400"
                 >
                   <option value="">Select day</option>
                   {daysOfWeek.map((day) => (
@@ -821,7 +924,7 @@ const Profile = () => {
                 </select>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Time Slots
                   </label>
                   {newAvailability.timeSlots.map((slot, index) => (
@@ -836,7 +939,7 @@ const Profile = () => {
                         onChange={(e) =>
                           handleTimeSlotChange(index, e.target.value)
                         }
-                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
+                        className="flex-1 bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400"
                       />
                       {newAvailability.timeSlots.length > 1 && (
                         <button
@@ -850,7 +953,7 @@ const Profile = () => {
                   ))}
                   <button
                     onClick={handleAddTimeSlot}
-                    className="text-blue-600 hover:text-blue-700 text-sm flex items-center space-x-1"
+                    className="text-cyan-400 hover:text-cyan-300 text-sm flex items-center space-x-1"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add time slot</span>
@@ -860,13 +963,13 @@ const Profile = () => {
                 <div className="flex space-x-2">
                   <button
                     onClick={handleAddAvailability}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-green-500/25"
                   >
                     Add Availability
                   </button>
                   <button
                     onClick={() => setShowAvailabilityForm(false)}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                    className="bg-slate-600 text-slate-300 px-4 py-2 rounded-lg hover:bg-slate-500 transition-colors"
                   >
                     Cancel
                   </button>
@@ -880,17 +983,17 @@ const Profile = () => {
             {state.currentUser.availability?.map((slot) => (
               <div
                 key={slot._id || slot.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg"
               >
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-1">
-                    <h3 className="font-medium text-gray-900">{slot.day}</h3>
+                    <h3 className="font-medium text-slate-100">{slot.day}</h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {slot.timeSlots.map((time, timeIndex) => (
                       <span
                         key={timeIndex}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-md"
+                        className="px-2 py-1 bg-cyan-500/20 text-cyan-300 text-sm rounded-md"
                       >
                         {time}
                       </span>
@@ -910,7 +1013,7 @@ const Profile = () => {
               state.currentUser.availability.length === 0) && (
               <div className="text-center py-8">
                 <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">
+                <p className="text-slate-400">
                   No availability set yet. Let others know when you're free!
                 </p>
               </div>

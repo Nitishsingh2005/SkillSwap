@@ -93,6 +93,10 @@ router.get("/categories", SkillsController.getCategories);
 // @desc    Get popular skills
 router.get("/popular", SkillsController.getPopularSkills);
 
+// @route   GET /api/skills/matches
+// @desc    Find skill matches for current user
+router.get("/matches", auth, SkillsController.findSkillMatches);
+
 // @route   GET /api/skills/match-suggestions/:userId
 // @desc    Get skill match suggestions for a user
 router.get(

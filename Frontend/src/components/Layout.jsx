@@ -44,7 +44,7 @@ const Layout = () => {
     { name: 'Search', href: '/search', icon: Search },
     { name: 'Messages', href: '/chat', icon: MessageCircle },
     { name: 'Schedule', href: '/booking', icon: Calendar },
-    { name: 'Matches', href: '/matches', icon: Users },
+    { name: 'Friends', href: '/friends', icon: Users },
     { name: 'Reviews', href: '/reviews', icon: Star },
     { name: 'Help', href: '/help', icon: HelpCircle },
   ];

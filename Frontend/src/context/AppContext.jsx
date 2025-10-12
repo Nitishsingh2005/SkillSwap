@@ -6,7 +6,7 @@ const initialState = {
   currentUser: null,
   users: [],
   sessions: [],
-  messages: [],
+  messages: JSON.parse(localStorage.getItem('messages') || '[]'),
   reviews: [],
   notifications: [],
   matches: [],
@@ -18,16 +18,19 @@ const initialState = {
 const appReducer = (state, action) => {
   switch (action.type) {
     case 'LOGIN':
+      console.log('LOGIN reducer called with payload:', action.payload);
       return {
         ...state,
         currentUser: action.payload,
         isAuthenticated: true,
       };
     case 'LOGOUT':
+      localStorage.removeItem('messages');
       return {
         ...state,
         currentUser: null,
         isAuthenticated: false,
+        messages: [],
       };
     case 'UPDATE_PROFILE':
       if (!state.currentUser) return state;
@@ -54,9 +57,27 @@ const appReducer = (state, action) => {
         ),
       };
     case 'ADD_MESSAGE':
+      const newMessages = [...state.messages, action.payload];
+      localStorage.setItem('messages', JSON.stringify(newMessages));
       return {
         ...state,
-        messages: [...state.messages, action.payload],
+        messages: newMessages,
+      };
+    case 'UPDATE_MESSAGE':
+      const updatedMessages = state.messages.map(msg => 
+        msg._id === action.payload.tempId ? action.payload.realMessage : msg
+      );
+      localStorage.setItem('messages', JSON.stringify(updatedMessages));
+      return {
+        ...state,
+        messages: updatedMessages,
+      };
+    case 'REMOVE_MESSAGE':
+      const filteredMessages = state.messages.filter(msg => msg._id !== action.payload);
+      localStorage.setItem('messages', JSON.stringify(filteredMessages));
+      return {
+        ...state,
+        messages: filteredMessages,
       };
     case 'ADD_REVIEW':
       return {
@@ -98,6 +119,7 @@ const appReducer = (state, action) => {
         conversations: action.payload,
       };
     case 'SET_MESSAGES':
+      localStorage.setItem('messages', JSON.stringify(action.payload));
       return {
         ...state,
         messages: action.payload,
@@ -156,11 +178,15 @@ export const AppProvider = ({ children }) => {
 
     login: async (credentials) => {
       try {
+        console.log('Login attempt with credentials:', credentials);
         const response = await authAPI.login(credentials);
+        console.log('Login response:', response);
         localStorage.setItem('token', response.token);
         dispatch({ type: 'LOGIN', payload: response.user });
+        console.log('User set in context:', response.user);
         return response;
       } catch (error) {
+        console.error('Login error:', error);
         throw error;
       }
     },

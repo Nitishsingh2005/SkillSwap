@@ -73,16 +73,16 @@ const Booking = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-slate-900 p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Schedule & Sessions</h1>
-          <p className="text-gray-600">Manage your skill exchange sessions and bookings.</p>
+          <h1 className="text-3xl font-bold text-slate-100 mb-2 tracking-tight">Schedule & Sessions</h1>
+          <p className="text-slate-300 text-lg">Manage your skill exchange sessions and bookings.</p>
         </div>
         <button
           onClick={() => setShowBookingForm(true)}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center space-x-2 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-cyan-500/25"
         >
           <Plus className="w-5 h-5" />
           <span>Book Session</span>
@@ -92,15 +92,15 @@ const Booking = () => {
       {/* Booking Form Modal */}
       {showBookingForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Book a Session</h2>
+          <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-slate-100 mb-6 tracking-tight">Book a Session</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Partner</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Select Partner</label>
                 <select
                   value={bookingForm.partnerId}
                   onChange={(e) => setBookingForm({ ...bookingForm, partnerId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100"
                 >
                   <option value="">Choose a partner</option>
                   {state.users.filter(user => user.id !== state.currentUser?.id).map(user => (
@@ -111,33 +111,33 @@ const Booking = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Your Skill</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Your Skill</label>
                   <input
                     type="text"
                     value={bookingForm.skillExchange.hostSkill}
                     onChange={(e) => setBookingForm({ ...bookingForm, skillExchange: { ...bookingForm.skillExchange, hostSkill: e.target.value } })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400"
                     placeholder="What you'll teach"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Their Skill</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Their Skill</label>
                   <input
                     type="text"
                     value={bookingForm.skillExchange.partnerSkill}
                     onChange={(e) => setBookingForm({ ...bookingForm, skillExchange: { ...bookingForm.skillExchange, partnerSkill: e.target.value } })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-400"
                     placeholder="What you'll learn"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Session Type</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Session Type</label>
                 <select
                   value={bookingForm.type}
                   onChange={(e) => setBookingForm({ ...bookingForm, type: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100"
                 >
                   <option value="video">Video Call</option>
                   <option value="chat">Text Chat</option>
@@ -146,30 +146,30 @@ const Booking = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Date</label>
                   <input
                     type="date"
                     value={bookingForm.date}
                     onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100"
                     min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Time</label>
                   <input
                     type="time"
                     value={bookingForm.time}
                     onChange={(e) => setBookingForm({ ...bookingForm, time: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-slate-100"
                   />
                 </div>
               </div>
             </div>
 
             <div className="flex space-x-4 mt-8">
-              <button onClick={handleBookSession} className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">Book Session</button>
-              <button onClick={() => setShowBookingForm(false)} className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+              <button onClick={handleBookSession} className="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-cyan-500/25">Book Session</button>
+              <button onClick={() => setShowBookingForm(false)} className="flex-1 border border-slate-600 text-slate-300 px-6 py-3 rounded-lg hover:bg-slate-700/50 transition-colors">Cancel</button>
             </div>
           </div>
         </div>
@@ -177,13 +177,13 @@ const Booking = () => {
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Upcoming Sessions */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Upcoming Sessions</h2>
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6">
+          <h2 className="text-xl font-semibold text-slate-100 mb-6 tracking-tight">Upcoming Sessions</h2>
           {upcomingSessions.length > 0 ? (
             upcomingSessions.map(session => {
               const partner = getPartnerInfo(session);
               return (
-                <div key={session.id} className="p-4 border border-gray-200 rounded-lg mb-4">
+                <div key={session.id} className="p-4 bg-slate-700/30 border border-slate-600 rounded-lg mb-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       {partner?.avatar ? (
@@ -194,8 +194,8 @@ const Booking = () => {
                         </div>
                       )}
                       <div>
-                        <h3 className="font-medium text-gray-900">{partner?.name || 'Unknown User'}</h3>
-                        <p className="text-sm text-gray-600">{session.skillExchange.hostSkill} ↔ {session.skillExchange.partnerSkill}</p>
+                        <h3 className="font-medium text-slate-100">{partner?.name || 'Unknown User'}</h3>
+                        <p className="text-sm text-slate-300">{session.skillExchange.hostSkill} ↔ {session.skillExchange.partnerSkill}</p>
                       </div>
                     </div>
 
@@ -205,7 +205,7 @@ const Booking = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <div className="flex items-center space-x-4 text-sm text-slate-300">
                     <div className="flex items-center space-x-1"><Calendar className="w-4 h-4" /><span>{new Date(session.scheduledAt).toLocaleDateString()}</span></div>
                     <div className="flex items-center space-x-1"><Clock className="w-4 h-4" /><span>{new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
                   </div>
@@ -218,7 +218,7 @@ const Booking = () => {
                   )}
 
                   {session.status === 'confirmed' && new Date(session.scheduledAt) <= new Date(Date.now() + 30 * 60 * 1000) && (
-                    <button onClick={() => handleJoinSession(session)} className="w-full mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button onClick={() => handleJoinSession(session)} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-cyan-500/25">
                       {session.type === 'video' ? 'Join Video Call' : 'Start Chat'}
                     </button>
                   )}
@@ -227,21 +227,21 @@ const Booking = () => {
             })
           ) : (
             <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No upcoming sessions</h3>
-              <p className="text-gray-600 mb-4">Book your first skill exchange session!</p>
-              <button onClick={() => setShowBookingForm(true)} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">Book Session</button>
+              <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-100 mb-2">No upcoming sessions</h3>
+              <p className="text-slate-300 mb-4">Book your first skill exchange session!</p>
+              <button onClick={() => setShowBookingForm(true)} className="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-cyan-500/25">Book Session</button>
             </div>
           )}
         </div>
 
         {/* Session History */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Session History</h2>
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6">
+          <h2 className="text-xl font-semibold text-slate-100 mb-6 tracking-tight">Session History</h2>
           {pastSessions.length > 0 ? pastSessions.slice(0, 5).map(session => {
             const partner = getPartnerInfo(session);
             return (
-              <div key={session.id} className="p-4 bg-gray-50 rounded-lg mb-4">
+              <div key={session.id} className="p-4 bg-slate-700/30 rounded-lg mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-3">
                     {partner?.avatar ? (
@@ -251,20 +251,20 @@ const Booking = () => {
                         <UserIcon className="w-4 h-4 text-gray-600" />
                       </div>
                     )}
-                    <h3 className="font-medium text-gray-900 text-sm">{partner?.name || 'Unknown User'}</h3>
+                    <h3 className="font-medium text-slate-100 text-sm">{partner?.name || 'Unknown User'}</h3>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(session.status)}`}>{session.status}</span>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{session.skillExchange.hostSkill} ↔ {session.skillExchange.partnerSkill}</p>
-                <p className="text-xs text-gray-500">{new Date(session.scheduledAt).toLocaleDateString()} at {new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                {session.status === 'completed' && <button className="w-full mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">Leave Review</button>}
+                <p className="text-sm text-slate-300 mb-2">{session.skillExchange.hostSkill} ↔ {session.skillExchange.partnerSkill}</p>
+                <p className="text-xs text-slate-400">{new Date(session.scheduledAt).toLocaleDateString()} at {new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                {session.status === 'completed' && <button className="w-full mt-3 text-cyan-400 hover:text-cyan-300 text-sm font-medium">Leave Review</button>}
               </div>
             );
           }) : (
             <div className="text-center py-8">
-              <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No past sessions</h3>
-              <p className="text-gray-600">Your completed sessions will appear here.</p>
+              <Clock className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-100 mb-2">No past sessions</h3>
+              <p className="text-slate-300">Your completed sessions will appear here.</p>
             </div>
           )}
         </div>

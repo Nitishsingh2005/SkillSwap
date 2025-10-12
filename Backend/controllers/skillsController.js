@@ -230,6 +230,230 @@ class SkillsController {
     }
   }
 
+  // Find skill matches for current user
+  static async findSkillMatches(req, res) {
+    try {
+      const currentUser = await User.findById(req.user._id);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get current user's skills
+      const userOfferingSkills = currentUser.skills.filter(skill => skill.offering === true);
+      const userSeekingSkills = currentUser.skills.filter(skill => skill.offering === false);
+
+      if (userOfferingSkills.length === 0 && userSeekingSkills.length === 0) {
+        return res.json({ 
+          matches: [], 
+          message: "Add skills to your profile to find matches" 
+        });
+      }
+
+      // Build aggregation pipeline for skill matching
+      const pipeline = [
+        // Exclude current user and inactive users
+        {
+          $match: {
+            _id: { $ne: currentUser._id },
+            isActive: true
+          }
+        },
+        // Add match score calculation
+        {
+          $addFields: {
+            matchScore: {
+              $let: {
+                vars: {
+                  userOffering: userOfferingSkills.map(s => ({
+                    name: s.name.toLowerCase(),
+                    level: s.level
+                  })),
+                  userSeeking: userSeekingSkills.map(s => ({
+                    name: s.name.toLowerCase(),
+                    level: s.level
+                  }))
+                },
+                in: {
+                  $add: [
+                    // Score for skills they can teach user (user wants to learn)
+                    {
+                      $size: {
+                        $filter: {
+                          input: "$skills",
+                          cond: {
+                            $and: [
+                              { $eq: ["$$this.offering", true] },
+                              {
+                                $in: [
+                                  { $toLower: "$$this.name" },
+                                  "$$userSeeking.name"
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    // Score for skills user can teach them (user wants to teach)
+                    {
+                      $size: {
+                        $filter: {
+                          input: "$skills",
+                          cond: {
+                            $and: [
+                              { $eq: ["$$this.offering", false] },
+                              {
+                                $in: [
+                                  { $toLower: "$$this.name" },
+                                  "$$userOffering.name"
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            // Find matching skills
+            matchingSkills: {
+              $let: {
+                vars: {
+                  userOffering: userOfferingSkills.map(s => ({
+                    name: s.name.toLowerCase(),
+                    level: s.level
+                  })),
+                  userSeeking: userSeekingSkills.map(s => ({
+                    name: s.name.toLowerCase(),
+                    level: s.level
+                  }))
+                },
+                in: {
+                  $concatArrays: [
+                    // Skills they can teach user
+                    {
+                      $map: {
+                        input: {
+                          $filter: {
+                            input: "$skills",
+                            cond: {
+                              $and: [
+                                { $eq: ["$$this.offering", true] },
+                                {
+                                  $in: [
+                                    { $toLower: "$$this.name" },
+                                    "$$userSeeking.name"
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        as: "skill",
+                        in: {
+                          name: "$$skill.name",
+                          level: "$$skill.level",
+                          category: "$$skill.category",
+                          type: "can_teach_me"
+                        }
+                      }
+                    },
+                    // Skills user can teach them
+                    {
+                      $map: {
+                        input: {
+                          $filter: {
+                            input: "$skills",
+                            cond: {
+                              $and: [
+                                { $eq: ["$$this.offering", false] },
+                                {
+                                  $in: [
+                                    { $toLower: "$$this.name" },
+                                    "$$userOffering.name"
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        as: "skill",
+                        in: {
+                          name: "$$skill.name",
+                          level: "$$skill.level",
+                          category: "$$skill.category",
+                          type: "wants_to_learn"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        // Only include users with matches
+        {
+          $match: {
+            matchScore: { $gt: 0 }
+          }
+        },
+        // Sort by match score (highest first)
+        {
+          $sort: { matchScore: -1 }
+        },
+        // Limit results
+        {
+          $limit: 50
+        },
+        // Project only needed fields
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            bio: 1,
+            avatar: 1,
+            location: 1,
+            videoCallReady: 1,
+            rating: 1,
+            reviewCount: 1,
+            matchScore: 1,
+            matchingSkills: 1,
+            skills: {
+              $map: {
+                input: "$skills",
+                as: "skill",
+                in: {
+                  name: "$$skill.name",
+                  category: "$$skill.category",
+                  level: "$$skill.level",
+                  offering: "$$skill.offering"
+                }
+              }
+            }
+          }
+        }
+      ];
+
+      const matches = await User.aggregate(pipeline);
+
+      res.json({
+        matches,
+        totalMatches: matches.length,
+        userSkills: {
+          offering: userOfferingSkills,
+          seeking: userSeekingSkills
+        }
+      });
+
+    } catch (error) {
+      console.error("Find skill matches error:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  }
+
   // Get skill categories with counts
   static async getCategories(req, res) {
     try {

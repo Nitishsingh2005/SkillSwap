@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { sampleUsers, sampleSessions, sampleNotifications, sampleMatches } from '../utils/sampleData';
+//import { sampleUsers, sampleSessions, sampleNotifications, sampleMatches } from '../utils/sampleData';
 import { 
   Calendar, 
   MessageCircle, 
@@ -18,27 +18,13 @@ const Dashboard = () => {
   
   // Debug logging for avatar updates
   console.log("Dashboard render - currentUser:", state.currentUser);
+  console.log("Dashboard render - isAuthenticated:", state.isAuthenticated);
   console.log("Dashboard render - avatar:", state.currentUser?.avatar);
 
   useEffect(() => {
-    // Initialize sample data if not already loaded
-    if (state.users.length === 0) {
-      dispatch({ type: 'SET_USERS', payload: sampleUsers });
-    }
-    if (state.notifications.length === 0) {
-      sampleNotifications.forEach(notification => {
-        dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
-      });
-    }
-    if (state.matches.length === 0) {
-      dispatch({ type: 'SET_MATCHES', payload: sampleMatches });
-    }
-    
-    // Add sample sessions
-    sampleSessions.forEach(session => {
-      dispatch({ type: 'ADD_SESSION', payload: session });
-    });
-  }, [dispatch, state.users.length, state.notifications.length, state.matches.length]);
+    // Initialize with empty data - real data will be loaded from API
+    console.log('Dashboard loaded - using real data from API');
+  }, []);
 
   const upcomingSessions = state.sessions
     .filter(session => session.scheduledAt > new Date() && session.status === 'confirmed')
@@ -89,8 +75,32 @@ const Dashboard = () => {
     return partner?.name || 'Unknown';
   };
 
+  // Show loading or empty state if no user
+  if (!state.currentUser) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto bg-slate-900 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-300">Loading user data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto bg-slate-900 min-h-screen">
+      {/* Debug Info */}
+      <div className="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+        <p className="text-slate-300 text-sm">
+          Debug: User logged in as {state.currentUser?.name} ({state.currentUser?.email})
+        </p>
+        <p className="text-slate-400 text-xs">
+          Skills: {state.currentUser?.skills?.length || 0} | 
+          Sessions: {state.sessions.length} | 
+          Matches: {state.matches.length}
+        </p>
+      </div>
+
       {/* Welcome Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-4 mb-4">

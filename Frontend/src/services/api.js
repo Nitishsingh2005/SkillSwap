@@ -184,6 +184,10 @@ export const skillsAPI = {
       method: "DELETE",
     });
   },
+
+  findSkillMatches: async () => {
+    return apiRequest("/skills/matches");
+  },
 };
 
 // Sessions API
@@ -249,6 +253,36 @@ export const reviewsAPI = {
       method: "POST",
       body: JSON.stringify(reviewData),
     });
+  },
+};
+
+// Friend Requests API
+export const friendRequestAPI = {
+  sendFriendRequest: async (receiverId, message = '') => {
+    return apiRequest("/friend-requests", {
+      method: "POST",
+      body: JSON.stringify({ receiverId, message }),
+    });
+  },
+
+  getFriendRequests: async (type = 'received') => {
+    return apiRequest(`/friend-requests?type=${type}`);
+  },
+
+  acceptFriendRequest: async (requestId) => {
+    return apiRequest(`/friend-requests/${requestId}/accept`, {
+      method: "PUT",
+    });
+  },
+
+  declineFriendRequest: async (requestId) => {
+    return apiRequest(`/friend-requests/${requestId}/decline`, {
+      method: "PUT",
+    });
+  },
+
+  getFriends: async () => {
+    return apiRequest("/friend-requests/friends");
   },
 };
 

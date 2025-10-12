@@ -36,6 +36,7 @@ const userSchema = new mongoose.Schema(
     reviewCount: { type: Number, default: 0 },
     location: { type: String, default: "" },
     portfolioLinks: [portfolioLinkSchema],
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     isActive: { type: Boolean, default: true },
   },
   {
