@@ -2,9 +2,24 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
+function reactMimeTypeFix() {
+  return {
+    name: 'react-mime-type-fix',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url.endsWith('.jsx')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        }
+        next();
+      });
+    }
+  }
+}
+
 export default defineConfig({
   plugins: [
     react(),
+    reactMimeTypeFix(),
     nodePolyfills({
       // To add only specific polyfills, add them here. If no option is passed, adds all.
       include: ["path", "stream", "util"],
