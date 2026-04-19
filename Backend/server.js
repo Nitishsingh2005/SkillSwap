@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const helmet = require("helmet");
@@ -88,8 +89,18 @@ app.use((err, req, res, next) => {
 });
 
 // Serve static files from the React frontend app
-const path = require("path");
-app.use(express.static(path.join(__dirname, "../Frontend/dist")));
+// Explicitly set correct MIME types to prevent binary/octet-stream issues with Helmet
+app.use(express.static(path.join(__dirname, "../Frontend/dist"), {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith(".js") || filePath.endsWith(".jsx") || filePath.endsWith(".mjs")) {
+      res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+    } else if (filePath.endsWith(".css")) {
+      res.setHeader("Content-Type", "text/css; charset=utf-8");
+    } else if (filePath.endsWith(".svg")) {
+      res.setHeader("Content-Type", "image/svg+xml");
+    }
+  }
+}));
 
 // Anything that doesn't match the above, send back index.html
 app.get(/.*/, (req, res) => {
