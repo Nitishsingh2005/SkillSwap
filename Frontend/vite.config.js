@@ -51,11 +51,10 @@ export default defineConfig({
   define: {
     global: "globalThis",
   },
-  esbuild: {
-    drop: ['console', 'debugger'],
-  },
+
   build: {
     chunkSizeWarningLimit: 1000,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks(id) {

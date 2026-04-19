@@ -2,17 +2,9 @@ services:
   - type: web
     name: skillswap
     env: node
-    # Since we are deploying it monolithically, the root provides best flexibility
     rootDir: .
-    # Install dependencies for both Frontend and Backend, then build Frontend
-    buildCommand: |
-      cd Frontend
-      npm install
-      npm run build
-      cd ../Backend
-      npm install
-    # Start the backend server which serves the built frontend
-    startCommand: cd Backend && node server.js
+    buildCommand: "npm install --prefix Frontend && npm run build --prefix Frontend && npm install --prefix Backend"
+    startCommand: "node Backend/server.js"
     envVars:
       - key: NODE_ENV
         value: production
@@ -22,7 +14,6 @@ services:
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
-      # You can manually add email SMTP variables if you use them:
       # - key: MAIL_USER
       #   sync: false
       # - key: MAIL_PASS
