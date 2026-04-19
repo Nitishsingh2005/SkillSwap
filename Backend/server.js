@@ -13,6 +13,15 @@ require("dotenv").config();
 const app = express();
 const server = createServer(app);
 
+// ── Serve React frontend FIRST before any middleware ──────────────────────────
+// This must be before Helmet so MIME types are not corrupted by security headers
+app.use(express.static(path.join(__dirname, "../Frontend/dist")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve index.html for all non-API routes (React Router support)
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "../Frontend/dist/index.html"));
+});
+
 // CORS — allow only the configured frontend origin
 const corsOptions = {
   origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -25,13 +34,13 @@ const io = new Server(server, {
   cors: corsOptions,
 });
 
-// Middleware
+// API Middleware (Helmet only applies to API routes, not static files)
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false // Disabled temporarily to prevent blocking WebRTC assets or specific scripts unless configured
+  contentSecurityPolicy: false,
 }));
-app.use(compression()); // Compress all responses
-app.use(mongoSanitize()); // Prevent NoSQL injection
+app.use(compression());
+app.use(mongoSanitize());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -39,13 +48,11 @@ app.use(express.urlencoded({ extended: true }));
 // Global Rate Limiter (Protects all API routes)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // Limit each IP to 500 requests per window
+  max: 500,
   message: "Too many requests from this IP, please try again later."
 });
 app.use("/api/", globalLimiter);
 
-// Serve static files for uploaded images
-app.use("/uploads", express.static("uploads"));
 
 // Add request logging middleware
 app.use((req, res, next) => {
@@ -88,24 +95,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Serve static files from the React frontend app
-// Explicitly set correct MIME types to prevent binary/octet-stream issues with Helmet
-app.use(express.static(path.join(__dirname, "../Frontend/dist"), {
-  setHeaders(res, filePath) {
-    if (filePath.endsWith(".js") || filePath.endsWith(".jsx") || filePath.endsWith(".mjs")) {
-      res.setHeader("Content-Type", "application/javascript; charset=utf-8");
-    } else if (filePath.endsWith(".css")) {
-      res.setHeader("Content-Type", "text/css; charset=utf-8");
-    } else if (filePath.endsWith(".svg")) {
-      res.setHeader("Content-Type", "image/svg+xml");
-    }
-  }
-}));
 
-// Anything that doesn't match the above, send back index.html
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "../Frontend/dist/index.html"));
-});
+
 
 // DB Connection
 mongoose
