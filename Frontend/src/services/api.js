@@ -1,4 +1,4 @@
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+const API_BASE_URL = `${import.meta.env.VITE_API_URL || ''}/api`;
 
 // Helper function to get auth token (always reads latest from storage)
 const getAuthToken = () => {
