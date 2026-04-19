@@ -37,7 +37,13 @@ const userSchema = new mongoose.Schema(
     location: { type: String, default: "" },
     portfolioLinks: [portfolioLinkSchema],
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    lastActive: { type: Date, default: null },
     isActive: { type: Boolean, default: true },
+    isAdmin: { type: Boolean, default: false },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String, default: null },
+    emailVerificationExpires: { type: Date, default: null },
   },
   {
     timestamps: true,

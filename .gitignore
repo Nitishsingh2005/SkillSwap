@@ -224,3 +224,7 @@ Thumbs.db
 # Local development files
 local/
 local-*
+
+# Custom Uploads & Configs
+Backend/uploads/
+test-runner.js

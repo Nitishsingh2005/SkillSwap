@@ -136,14 +136,14 @@ const Help = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 max-w-6xl mx-auto p-6">
+    <div className="min-h-screen bg-surface max-w-6xl mx-auto p-6">
       {/* Header */}
       <div className="text-center mb-12">
         <div className="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
           <HelpCircle className="w-8 h-8 text-cyan-400" />
         </div>
-        <h1 className="text-4xl font-bold text-slate-100 mb-4 tracking-tight">How Can We Help You?</h1>
-        <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold text-ink mb-4 tracking-tight">How Can We Help You?</h1>
+        <p className="text-xl text-ink-muted max-w-2xl mx-auto">
           Find answers to common questions or get in touch with our support team.
         </p>
       </div>
@@ -152,14 +152,14 @@ const Help = () => {
       <div className="max-w-2xl mx-auto mb-12">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-slate-400" />
+            <Search className="h-5 w-5 text-ink-muted" />
           </div>
           <input
             type="text"
             placeholder="Search for help articles..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-12 pr-4 py-4 bg-slate-800/50 border border-slate-600 rounded-xl text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-lg"
+            className="block w-full pl-12 pr-4 py-4 bg-surface-2 border border-border rounded-xl text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-lg"
           />
         </div>
       </div>
@@ -169,12 +169,12 @@ const Help = () => {
         {quickLinks.map((link, index) => {
           const Icon = link.icon;
           return (
-            <div key={index} className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-6 hover:border-cyan-500/30 hover:shadow-cyan-500/10 transition-all duration-300 cursor-pointer">
+            <div key={index} className="bg-surface-2 backdrop-blur-sm rounded-xl shadow-lg border border-border p-6 hover:border-cyan-500/30 hover:shadow-cyan-500/10 transition-all duration-300 cursor-pointer">
               <div className={`w-12 h-12 ${link.color} rounded-lg flex items-center justify-center mb-4`}>
                 <Icon className="w-6 h-6" />
               </div>
-              <h3 className="font-semibold text-slate-100 mb-2">{link.title}</h3>
-              <p className="text-sm text-slate-300">{link.description}</p>
+              <h3 className="font-semibold text-ink mb-2">{link.title}</h3>
+              <p className="text-sm text-ink-muted">{link.description}</p>
             </div>
           );
         })}
@@ -183,35 +183,35 @@ const Help = () => {
       <div className="grid lg:grid-cols-3 gap-12">
         {/* FAQ Section */}
         <div className="lg:col-span-2">
-          <h2 className="text-2xl font-bold text-slate-100 mb-8 tracking-tight">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-ink mb-8 tracking-tight">Frequently Asked Questions</h2>
           
           {filteredFAQs.length > 0 ? (
             <div className="space-y-8">
               {filteredFAQs.map((category, categoryIndex) => (
                 <div key={categoryIndex}>
-                  <h3 className="text-lg font-semibold text-slate-100 mb-4 tracking-tight">{category.category}</h3>
+                  <h3 className="text-lg font-semibold text-ink mb-4 tracking-tight">{category.category}</h3>
                   <div className="space-y-4">
                     {category.questions.map((qa, qaIndex) => {
                       const uniqueIndex = categoryIndex * 100 + qaIndex;
                       const isExpanded = expandedFAQ === uniqueIndex;
                       
                       return (
-                        <div key={qaIndex} className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg border border-slate-700/50">
+                        <div key={qaIndex} className="bg-surface-2 backdrop-blur-sm rounded-lg shadow-lg border border-border">
                           <button
                             onClick={() => setExpandedFAQ(isExpanded ? null : uniqueIndex)}
-                            className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-700/50 transition-colors"
+                            className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-surface border-border transition-colors"
                           >
-                            <span className="font-medium text-slate-100">{qa.question}</span>
+                            <span className="font-medium text-ink">{qa.question}</span>
                             {isExpanded ? (
-                              <ChevronDown className="w-5 h-5 text-slate-400" />
+                              <ChevronDown className="w-5 h-5 text-ink-muted" />
                             ) : (
-                              <ChevronRight className="w-5 h-5 text-slate-400" />
+                              <ChevronRight className="w-5 h-5 text-ink-muted" />
                             )}
                           </button>
                           
                           {isExpanded && (
                             <div className="px-6 pb-4">
-                              <p className="text-slate-300 leading-relaxed">{qa.answer}</p>
+                              <p className="text-ink-muted leading-relaxed">{qa.answer}</p>
                             </div>
                           )}
                         </div>
@@ -223,9 +223,9 @@ const Help = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <Search className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-100 mb-2">No results found</h3>
-              <p className="text-slate-300">
+              <Search className="w-12 h-12 text-ink-muted mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-ink mb-2">No results found</h3>
+              <p className="text-ink-muted">
                 Try different keywords or check out our quick links above.
               </p>
             </div>
@@ -234,13 +234,13 @@ const Help = () => {
 
         {/* Contact Support */}
         <div>
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-8 sticky top-8">
+          <div className="bg-surface-2 backdrop-blur-sm rounded-xl shadow-lg border border-border p-8 sticky top-8">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <MessageCircle className="w-6 h-6 text-green-400" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-100 mb-2 tracking-tight">Still Need Help?</h3>
-              <p className="text-slate-300">Get in touch with our support team</p>
+              <h3 className="text-xl font-semibold text-ink mb-2 tracking-tight">Still Need Help?</h3>
+              <p className="text-ink-muted">Get in touch with our support team</p>
             </div>
 
             <form onSubmit={handleContactSubmit} className="space-y-4">
@@ -249,7 +249,7 @@ const Help = () => {
                 placeholder="Your Name"
                 value={contactForm.name}
                 onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full bg-surface border-border border border-border rounded-lg px-4 py-3 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
               <input
@@ -257,7 +257,7 @@ const Help = () => {
                 placeholder="Your Email"
                 value={contactForm.email}
                 onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full bg-surface border-border border border-border rounded-lg px-4 py-3 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
               <input
@@ -265,7 +265,7 @@ const Help = () => {
                 placeholder="Subject"
                 value={contactForm.subject}
                 onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full bg-surface border-border border border-border rounded-lg px-4 py-3 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
               <textarea
@@ -273,7 +273,7 @@ const Help = () => {
                 value={contactForm.message}
                 onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                 rows={4}
-                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full bg-surface border-border border border-border rounded-lg px-4 py-3 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
               <button
@@ -284,8 +284,8 @@ const Help = () => {
               </button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-slate-600 text-center">
-              <p className="text-sm text-slate-300 mb-4">Or reach us directly:</p>
+            <div className="mt-6 pt-6 border-t border-border text-center">
+              <p className="text-sm text-ink-muted mb-4">Or reach us directly:</p>
               <a
                 href="mailto:support@skillswap.com"
                 className="flex items-center justify-center space-x-2 text-cyan-400 hover:text-cyan-300"

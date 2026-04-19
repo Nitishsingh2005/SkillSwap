@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { authAPI, skillsAPI, sessionsAPI, messagesAPI, reviewsAPI, matchesAPI, notificationsAPI } from '../services/api';
+import socketService from '../services/socketService';
 
 // Initial state
 const initialState = {
@@ -11,7 +12,9 @@ const initialState = {
   notifications: [],
   matches: [],
   conversations: [],
+  friends: [],
   isAuthenticated: false,
+  authLoading: true,  // true until the initial profile check completes
 };
 
 // Reducer function
@@ -23,6 +26,7 @@ const appReducer = (state, action) => {
         ...state,
         currentUser: action.payload,
         isAuthenticated: true,
+        authLoading: false,
       };
     case 'LOGOUT':
       localStorage.removeItem('messages');
@@ -30,8 +34,13 @@ const appReducer = (state, action) => {
         ...state,
         currentUser: null,
         isAuthenticated: false,
+        authLoading: false,
         messages: [],
       };
+    case 'AUTH_RESOLVED':
+      // Auth check finished but user was not logged in
+      return { ...state, authLoading: false };
+
     case 'UPDATE_PROFILE':
       if (!state.currentUser) return state;
       console.log("UPDATE_PROFILE reducer - payload:", action.payload);
@@ -42,6 +51,15 @@ const appReducer = (state, action) => {
         ...state,
         currentUser: updatedUser,
       };
+    case 'SET_BLOCKED_USERS':
+      if (!state.currentUser) return state;
+      return {
+        ...state,
+        currentUser: {
+          ...state.currentUser,
+          blockedUsers: action.payload,
+        },
+      };
     case 'ADD_SESSION':
       return {
         ...state,
@@ -50,11 +68,12 @@ const appReducer = (state, action) => {
     case 'UPDATE_SESSION':
       return {
         ...state,
-        sessions: state.sessions.map((session) =>
-          session.id === action.payload.id
+        sessions: state.sessions.map((session) => {
+          const sessionId = session._id || session.id;
+          return sessionId === action.payload.id || sessionId?.toString() === action.payload.id?.toString()
             ? { ...session, ...action.payload.updates }
-            : session
-        ),
+            : session;
+        }),
       };
     case 'ADD_MESSAGE':
       const newMessages = [...state.messages, action.payload];
@@ -72,6 +91,53 @@ const appReducer = (state, action) => {
         ...state,
         messages: updatedMessages,
       };
+    case 'UPSERT_MESSAGE': {
+      let upsertedMessages;
+      if (state.messages.some(msg => msg._id === action.payload._id)) {
+        upsertedMessages = state.messages.map(msg => msg._id === action.payload._id ? action.payload : msg);
+      } else {
+        upsertedMessages = [...state.messages, action.payload];
+      }
+      localStorage.setItem('messages', JSON.stringify(upsertedMessages));
+      return {
+        ...state,
+        messages: upsertedMessages,
+      };
+    }
+    case 'CONFIRM_MESSAGE': {
+      const formattedMessage = action.payload;
+      let confirmMessages = [...state.messages];
+      
+      const tempMsgIndex = confirmMessages.findIndex(
+        (msg) =>
+          msg.content === formattedMessage.content &&
+          msg.isSending === true &&
+          msg.senderId === formattedMessage.senderId &&
+          msg.receiverId === formattedMessage.receiverId
+      );
+
+      if (tempMsgIndex !== -1) {
+        confirmMessages[tempMsgIndex] = formattedMessage;
+      } else {
+        const exists = confirmMessages.some(
+          (msg) =>
+            msg._id === formattedMessage._id ||
+            (msg.content === formattedMessage.content &&
+              msg.senderId === formattedMessage.senderId &&
+              msg.receiverId === formattedMessage.receiverId &&
+              Math.abs(new Date(msg.timestamp) - new Date(formattedMessage.timestamp)) < 5000)
+        );
+        if (!exists) {
+          confirmMessages.push(formattedMessage);
+        }
+      }
+      
+      localStorage.setItem('messages', JSON.stringify(confirmMessages));
+      return {
+        ...state,
+        messages: confirmMessages,
+      };
+    }
     case 'REMOVE_MESSAGE':
       const filteredMessages = state.messages.filter(msg => msg._id !== action.payload);
       localStorage.setItem('messages', JSON.stringify(filteredMessages));
@@ -112,6 +178,20 @@ const appReducer = (state, action) => {
       return {
         ...state,
         sessions: action.payload,
+      };
+    case 'SET_FRIENDS':
+      return {
+        ...state,
+        friends: action.payload,
+      };
+    case 'ADD_FRIEND':
+      // Avoid duplicate
+      if (state.friends.some(f => (f._id || f.id)?.toString() === (action.payload._id || action.payload.id)?.toString())) {
+        return state;
+      }
+      return {
+        ...state,
+        friends: [...state.friends, action.payload],
       };
     case 'SET_CONVERSATIONS':
       return {
@@ -158,9 +238,59 @@ export const AppProvider = ({ children }) => {
         .catch(() => {
           // Token is invalid, remove it
           localStorage.removeItem('token');
+        })
+        .finally(() => {
+          dispatch({ type: 'AUTH_RESOLVED' });
         });
+    } else {
+      // No token — resolve immediately
+      dispatch({ type: 'AUTH_RESOLVED' });
     }
   }, []);
+
+  // Manage socket connection based on auth state
+  // Manage socket connection based on auth state
+  useEffect(() => {
+    if (state.isAuthenticated && localStorage.getItem('token')) {
+      const token = localStorage.getItem('token');
+      console.log("AppContext: connecting socket with token");
+      socketService.connect(token);
+      
+      // Global listeners for real-time updates
+      
+      // 1. Session Created
+      socketService.onSessionCreated(({ session }) => {
+          if (session) {
+             console.log("Socket: New session received", session);
+             dispatch({ type: 'ADD_SESSION', payload: session });
+             // Refresh notifications to show badge
+             notificationsAPI.getNotifications().then(res => {
+                if (res.notifications) {
+                  dispatch({ type: 'SET_NOTIFICATIONS', payload: res.notifications });
+                }
+             }).catch(err => console.error("Failed to fetch notifications:", err));
+          }
+      });
+
+      // 2. Session Updated
+      socketService.onSessionUpdated(({ session }) => {
+           if (session) {
+              console.log("Socket: Session updated", session);
+              dispatch({ type: 'UPDATE_SESSION', payload: { id: session._id, updates: session } });
+              // Refresh notifications (e.g. session confirmed)
+              notificationsAPI.getNotifications().then(res => {
+                if (res.notifications) {
+                  dispatch({ type: 'SET_NOTIFICATIONS', payload: res.notifications });
+                }
+             }).catch(err => console.error("Failed to fetch notifications:", err));
+           }
+      });
+      
+    } else if (!state.isAuthenticated) {
+      console.log("AppContext: disconnecting socket");
+      socketService.disconnect();
+    }
+  }, [state.isAuthenticated]);
 
   // API functions
   const api = {
@@ -168,8 +298,8 @@ export const AppProvider = ({ children }) => {
     register: async (userData) => {
       try {
         const response = await authAPI.register(userData);
-        localStorage.setItem('token', response.token);
-        dispatch({ type: 'LOGIN', payload: response.user });
+        // Do NOT log in yet — user must verify their email first
+        // The response has { requiresVerification: true, email }
         return response;
       } catch (error) {
         throw error;
@@ -181,7 +311,11 @@ export const AppProvider = ({ children }) => {
         console.log('Login attempt with credentials:', credentials);
         const response = await authAPI.login(credentials);
         console.log('Login response:', response);
-        localStorage.setItem('token', response.token);
+        // Store both tokens (accessToken stored under 'token' for legacy compatibility)
+        localStorage.setItem('token', response.accessToken || response.token);
+        if (response.refreshToken) {
+          localStorage.setItem('refreshToken', response.refreshToken);
+        }
         dispatch({ type: 'LOGIN', payload: response.user });
         console.log('User set in context:', response.user);
         return response;
@@ -194,11 +328,11 @@ export const AppProvider = ({ children }) => {
     logout: async () => {
       try {
         await authAPI.logout();
+      } catch (_) {
+        // Proceed with logout even if API call fails
+      } finally {
         localStorage.removeItem('token');
-        dispatch({ type: 'LOGOUT' });
-      } catch (error) {
-        // Even if API call fails, clear local state
-        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         dispatch({ type: 'LOGOUT' });
       }
     },
@@ -314,6 +448,21 @@ export const AppProvider = ({ children }) => {
         const response = await reviewsAPI.getReviews(userId);
         dispatch({ type: 'SET_REVIEWS', payload: response.reviews });
         return response;
+      } catch (error) {
+        throw error;
+      }
+    },
+
+    getMyReviews: async () => {
+      try {
+        const [receivedResp, givenResp] = await Promise.all([
+          reviewsAPI.getMyReviews('received'),
+          reviewsAPI.getMyReviews('given')
+        ]);
+        const combined = [...receivedResp.reviews, ...givenResp.reviews];
+        const uniqueReviews = Array.from(new Map(combined.map(r => [r._id || r.id, r])).values());
+        dispatch({ type: 'SET_REVIEWS', payload: uniqueReviews });
+        return uniqueReviews;
       } catch (error) {
         throw error;
       }

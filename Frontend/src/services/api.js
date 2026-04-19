@@ -1,30 +1,59 @@
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
 
-// Helper function to get auth token
+// Helper function to get auth token (always reads latest from storage)
 const getAuthToken = () => {
   return localStorage.getItem("token");
 };
 
-// Helper function to make API requests
-const apiRequest = async (endpoint, options = {}) => {
+// Attempt to silently refresh the access token using the stored refreshToken
+const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem("refreshToken");
+  if (!refreshToken) throw new Error("No refresh token available");
+
+  const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+  if (!response.ok) throw new Error("Refresh failed");
+  const data = await response.json();
+  // Store both keys so legacy code still works
+  localStorage.setItem("token", data.accessToken);
+  return data.accessToken;
+};
+
+// Helper function to make API requests (with automatic token refresh on 401)
+const apiRequest = async (endpoint, options = {}, _retry = false) => {
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getAuthToken();
 
   const config = {
     headers: {
       "Content-Type": "application/json",
+      "ngrok-skip-browser-warning": "true",
       ...(token && { Authorization: `Bearer ${token}` }),
     },
     ...options,
   };
 
   try {
-    console.log("Making API request to:", url);
-    console.log("Request config:", config);
+    console.log(`API Request: ${options.method || 'GET'} ${url}`);
 
     const response = await fetch(url, config);
     console.log("Response status:", response.status);
-    console.log("Response headers:", response.headers);
+
+    // Auto-refresh on 401 (only one retry to avoid infinite loops)
+    if (response.status === 401 && !_retry) {
+      try {
+        await refreshAccessToken();
+        return apiRequest(endpoint, options, true);
+      } catch {
+        // Refresh failed — let the 401 propagate so the app can redirect to login
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        throw new Error("Session expired. Please log in again.");
+      }
+    }
 
     // Check if response is JSON
     const contentType = response.headers.get("content-type");
@@ -49,6 +78,7 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
+
 // Auth API
 export const authAPI = {
   register: async (userData) => {
@@ -65,6 +95,17 @@ export const authAPI = {
     });
   },
 
+  verifyEmail: async (token) => {
+    return apiRequest(`/auth/verify-email/${token}`);
+  },
+
+  resendVerification: async (email) => {
+    return apiRequest("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
   getProfile: async () => {
     return apiRequest("/auth/profile");
   },
@@ -78,7 +119,7 @@ export const authAPI = {
 
   // Profile Picture Upload
   uploadProfilePicture: async (formData) => {
-    const url = `${API_BASE_URL}/auth/upload-avatar`;
+    const url = `${import.meta.env.VITE_API_URL}/api/auth/upload-avatar`;
     const token = getAuthToken();
 
     const config = {
@@ -119,6 +160,13 @@ export const authAPI = {
     }
   },
 
+  // Profile Picture Remove
+  removeProfilePicture: async () => {
+    return apiRequest("/auth/remove-avatar", {
+      method: "DELETE",
+    });
+  },
+
   // Portfolio Links
   addPortfolioLink: async (linkData) => {
     return apiRequest("/auth/portfolio-links", {
@@ -150,6 +198,32 @@ export const authAPI = {
   logout: async () => {
     return apiRequest("/auth/logout", {
       method: "POST",
+    });
+  },
+};
+
+// Users API (Block/Report functionality)
+export const usersAPI = {
+  blockUser: async (userId) => {
+    return apiRequest(`/users/${userId}/block`, {
+      method: "POST",
+    });
+  },
+
+  unblockUser: async (userId) => {
+    return apiRequest(`/users/${userId}/unblock`, {
+      method: "POST",
+    });
+  },
+
+  getBlockedUsers: async () => {
+    return apiRequest("/users/blocked");
+  },
+
+  reportUser: async (userId, reason) => {
+    return apiRequest(`/users/${userId}/report`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
     });
   },
 };
@@ -216,6 +290,21 @@ export const sessionsAPI = {
       method: "DELETE",
     });
   },
+
+  // Video call APIs
+  joinSession: async (sessionId) => {
+    return apiRequest(`/requests/sessions/${sessionId}/join`);
+  },
+
+  endCall: async (sessionId) => {
+    return apiRequest(`/requests/sessions/${sessionId}/end-call`, {
+      method: "PUT",
+    });
+  },
+
+  getIceConfig: async (sessionId) => {
+    return apiRequest(`/requests/sessions/${sessionId}/ice-config`);
+  },
 };
 
 // Messages API
@@ -228,6 +317,25 @@ export const messagesAPI = {
     return apiRequest(`/messages/conversations/${conversationId}/messages`);
   },
 
+  uploadFile: async (formData) => {
+    // Re-implementing a custom request for multipart/form-data
+    // similar to authAPI.uploadProfilePicture
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/messages/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Something went wrong");
+    }
+    return data;
+  },
+
   sendMessage: async (conversationId, messageData) => {
     return apiRequest(`/messages/conversations/${conversationId}/messages`, {
       method: "POST",
@@ -235,9 +343,28 @@ export const messagesAPI = {
     });
   },
 
+  // Direct message send by receiverId (used by InCallChat for DB persistence)
+  sendDirectMessage: async (receiverId, content, messageType = "text") => {
+    return apiRequest("/messages/send", {
+      method: "POST",
+      body: JSON.stringify({ receiverId, content, messageType }),
+    });
+  },
+
+  // Get messages with a specific user by their userId
+  getMessagesByUser: async (userId) => {
+    return apiRequest(`/messages/with/${userId}`);
+  },
+
   markMessageRead: async (messageId) => {
     return apiRequest(`/messages/${messageId}/read`, {
       method: "PUT",
+    });
+  },
+
+  clearConversation: async (conversationId) => {
+    return apiRequest(`/messages/conversations/${conversationId}/clear`, {
+      method: "DELETE",
     });
   },
 };
@@ -245,7 +372,11 @@ export const messagesAPI = {
 // Reviews API
 export const reviewsAPI = {
   getReviews: async (userId) => {
-    return apiRequest(`/reviews/${userId}`);
+    return apiRequest(`/reviews/users/${userId}`);
+  },
+
+  getMyReviews: async (type = 'received') => {
+    return apiRequest(`/reviews?type=${type}`);
   },
 
   createReview: async (reviewData) => {
@@ -258,14 +389,14 @@ export const reviewsAPI = {
 
 // Friend Requests API
 export const friendRequestAPI = {
-  sendFriendRequest: async (receiverId, message = '') => {
+  sendFriendRequest: async (receiverId, message = "") => {
     return apiRequest("/friend-requests", {
       method: "POST",
       body: JSON.stringify({ receiverId, message }),
     });
   },
 
-  getFriendRequests: async (type = 'received') => {
+  getFriendRequests: async (type = "received") => {
     return apiRequest(`/friend-requests?type=${type}`);
   },
 

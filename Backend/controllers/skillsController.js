@@ -16,7 +16,20 @@ class SkillsController {
         limit = 20,
       } = req.query;
 
-      const filter = { _id: { $ne: req.user._id }, isActive: true };
+      const filter = { isActive: true };
+      
+      if (req.user && req.user._id) {
+        const currentUser = await User.findById(req.user._id);
+        
+        filter.$and = [
+          { _id: { $ne: req.user._id } },
+          { blockedUsers: { $ne: req.user._id } }
+        ];
+
+        if (currentUser && currentUser.blockedUsers && currentUser.blockedUsers.length > 0) {
+          filter.$and.push({ _id: { $nin: currentUser.blockedUsers } });
+        }
+      }
 
       // Search filter
       if (search) {
@@ -61,7 +74,7 @@ class SkillsController {
         .select("-password")
         .limit(limit * 1)
         .skip((page - 1) * limit)
-        .sort({ createdAt: -1 });
+        .sort({ lastActive: -1, createdAt: -1 });
 
       const total = await User.countDocuments(filter);
 
@@ -251,10 +264,14 @@ class SkillsController {
 
       // Build aggregation pipeline for skill matching
       const pipeline = [
-        // Exclude current user and inactive users
+        // Exclude current user, inactive users, and blocked users
         {
           $match: {
-            _id: { $ne: currentUser._id },
+            _id: { 
+              $ne: currentUser._id,
+              $nin: currentUser.blockedUsers || []
+            },
+            blockedUsers: { $ne: currentUser._id },
             isActive: true
           }
         },

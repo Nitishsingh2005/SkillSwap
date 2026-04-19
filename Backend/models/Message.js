@@ -10,7 +10,8 @@ const messageSchema = new mongoose.Schema({
     enum: ['text', 'image', 'file'], 
     default: 'text' 
   },
-  sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Session', default: null }
+  sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Session', default: null },
+  deletedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, {
   timestamps: true
 });
