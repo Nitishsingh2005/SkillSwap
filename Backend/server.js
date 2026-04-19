@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+const helmet = require("helmet");
+const compression = require("compression");
+const mongoSanitize = require("express-mongo-sanitize");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const app = express();
@@ -21,9 +25,23 @@ const io = new Server(server, {
 });
 
 // Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false // Disabled temporarily to prevent blocking WebRTC assets or specific scripts unless configured
+}));
+app.use(compression()); // Compress all responses
+app.use(mongoSanitize()); // Prevent NoSQL injection
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Global Rate Limiter (Protects all API routes)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // Limit each IP to 500 requests per window
+  message: "Too many requests from this IP, please try again later."
+});
+app.use("/api/", globalLimiter);
 
 // Serve static files for uploaded images
 app.use("/uploads", express.static("uploads"));
