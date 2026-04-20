@@ -6,7 +6,7 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 const helmet = require("helmet");
 const compression = require("compression");
-const mongoSanitize = require("express-mongo-sanitize");
+
 const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
@@ -40,7 +40,6 @@ app.use(helmet({
   contentSecurityPolicy: false,
 }));
 app.use(compression());
-app.use(mongoSanitize({ dryRun: true }));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
