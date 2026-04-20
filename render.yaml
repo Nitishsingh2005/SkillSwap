@@ -3,7 +3,7 @@ services:
     name: skillswap
     env: node
     rootDir: .
-    buildCommand: "npm install --include=dev --prefix Frontend && npm run build --prefix Frontend && npm install --prefix Backend"
+    buildCommand: "NODE_ENV=development npm install --prefix Frontend && npm run build --prefix Frontend && npm install --prefix Backend"
     startCommand: "node Backend/server.js"
     envVars:
       - key: NODE_ENV
